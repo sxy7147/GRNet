@@ -67,6 +67,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             if type(file_path) == list:
                 file_path = file_path[rand_idx]
 
+            # 返回值是三维坐标的列表(np)
             data[ri] = IO.get(file_path).astype(np.float32)
 
         if self.transforms is not None:
@@ -166,13 +167,18 @@ class Completion3DDataLoader(object):
     def __init__(self, cfg):
         self.cfg = cfg
 
+
         # Load the dataset indexing file
         self.dataset_categories = []
         with open(cfg.DATASETS.COMPLETION3D.CATEGORY_FILE_PATH) as f:
             self.dataset_categories = json.loads(f.read())
 
-    def get_dataset(self, subset):
-        file_list = self._get_file_list(self.cfg, self._get_subset(subset))
+    # subset: utils.data_loaders.DatasetSubset.TEST， 即test对应的编号1
+    # 返回值就是数据，是个三元组
+    # 应该只需要修改filelist即可, 返回值也成为 4-keys dictionary, 也可以另成一套流程吧
+    def get_dataset(self, subset):  # get_dataset(self,1)
+        # _get_file_list的返回值是个字典，key: {'taxonomy_id', 'model_id', 'partial_cloud_path', 'gtcloud_path'}
+        file_list = self._get_file_list(self.cfg, self._get_subset(subset))   # _get_file_list(cfg,'test')
         transforms = self._get_transforms(self.cfg, subset)
         required_items = ['partial_cloud'] if subset == DatasetSubset.TEST else ['partial_cloud', 'gtcloud']
 
@@ -222,9 +228,9 @@ class Completion3DDataLoader(object):
 
         for dc in self.dataset_categories:
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
-            samples = dc[subset]
+            samples = dc[subset]  # 每个循环，sample就是该类的数据
 
-            for s in tqdm(samples, leave=False):
+            for s in tqdm(samples, leave=False):  # tqdm用于显示进度
                 file_list.append({
                     'taxonomy_id':
                     dc['taxonomy_id'],

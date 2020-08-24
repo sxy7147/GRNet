@@ -7,6 +7,12 @@
 
 import logging
 import torch
+import matplotlib
+import matplotlib.pyplot as plt
+# import scipy.misc
+# import cv2 as cv
+# import numpy as np
+
 
 import utils.data_loaders
 import utils.helpers
@@ -16,6 +22,7 @@ from extensions.gridding_loss import GriddingLoss
 from models.grnet import GRNet
 from utils.average_meter import AverageMeter
 from utils.metrics import Metrics
+from PIL import Image
 
 
 def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=None):
@@ -25,6 +32,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
     if test_data_loader is None:
         # Set up data loader
         dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
+        # 在data_loader.py中修改这里的dataset值
         test_data_loader = torch.utils.data.DataLoader(dataset=dataset_loader.get_dataset(
             utils.data_loaders.DatasetSubset.TEST),
                                                        batch_size=1,
@@ -58,7 +66,9 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
     test_metrics = AverageMeter(Metrics.names())
     category_metrics = dict()
 
+
     # Testing loop
+    # 通过data得到sparse_pucloud,  data from test_data_loader
     for model_idx, (taxonomy_id, model_id, data) in enumerate(test_data_loader):
         taxonomy_id = taxonomy_id[0] if isinstance(taxonomy_id[0], str) else taxonomy_id[0].item()
         model_id = model_id[0]
@@ -78,21 +88,61 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
                 category_metrics[taxonomy_id] = AverageMeter(Metrics.names())
             category_metrics[taxonomy_id].update(_metrics)
 
-            if test_writer is not None and model_idx < 3:
+            plt.figure()
+            if model_idx in range(510, 600):
+
+                now_num=model_idx-499
+                # if test_writer is not None and model_idx < 3:
                 sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
                 sparse_ptcloud_img = utils.helpers.get_ptcloud_img(sparse_ptcloud)
+                '''plt.subplot(10, 3, 3*now_num-2)
+                plt.imshow(sparse_ptcloud_img)
+                plt.xticks([])
+                plt.yticks([])'''
+                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results/%s_%s_sps.png'%(model_idx,model_id), sparse_ptcloud_img)
+
+                dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
+                dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
+                '''plt.subplot(10, 3, 3 * now_num - 1)
+                plt.imshow(dense_ptcloud_img)
+                plt.xticks([])
+                plt.yticks([])'''
+                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results/%s_%s_dns.png' % (model_idx, model_id),
+                                        dense_ptcloud_img)
+
+
+                gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
+                gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
+                '''plt.subplot(10, 3, 3 * now_num )
+                plt.imshow(gt_ptcloud_img)
+                plt.xticks([])
+                plt.yticks([])'''
+                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results/%s_%s_gt.png'%(model_idx,model_id), gt_ptcloud_img)
+
+
+                '''
+                cv.imwrite("/home2/wuruihai/GRNet_FILES/out3.png", sparse_ptcloud_img)
+                im = Image.fromarray(sparse_ptcloud_img).convert('RGB')
+                im.save("/home2/wuruihai/GRNet_FILES/out.jpeg")
+                '''
+
+
+                '''
                 test_writer.add_image('Model%02d/SparseReconstruction' % model_idx, sparse_ptcloud_img, epoch_idx)
                 dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
                 dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
                 test_writer.add_image('Model%02d/DenseReconstruction' % model_idx, dense_ptcloud_img, epoch_idx)
+
                 gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
                 gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
                 test_writer.add_image('Model%02d/GroundTruth' % model_idx, gt_ptcloud_img, epoch_idx)
+                '''
 
             logging.info('Test[%d/%d] Taxonomy = %s Sample = %s Losses = %s Metrics = %s' %
                          (model_idx + 1, n_samples, taxonomy_id, model_id, ['%.4f' % l for l in test_losses.val()
                                                                             ], ['%.4f' % m for m in _metrics]))
-
+    plt.show()
+    plt.savefig('/raid/wuruihai/GRNet_FILES/results.png')
     # Print testing results
     print('============================ TEST RESULTS ============================')
     print('Taxonomy', end='\t')

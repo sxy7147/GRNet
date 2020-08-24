@@ -29,8 +29,10 @@ def train_net(cfg):
     torch.backends.cudnn.benchmark = True
 
     # Set up data loader
+    # choose ShapeNet
     train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TRAIN_DATASET](cfg)
     test_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
+    # get_dataset's para: subdataset(train0, test1, val2)
     train_data_loader = torch.utils.data.DataLoader(dataset=train_dataset_loader.get_dataset(
         utils.data_loaders.DatasetSubset.TRAIN),
                                                     batch_size=cfg.TRAIN.BATCH_SIZE,
@@ -141,8 +143,8 @@ def train_net(cfg):
         metrics = test_net(cfg, epoch_idx, val_data_loader, val_writer, grnet)
 
         # Save ckeckpoints
-        if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0 or metrics.better_than(best_metrics):
-            file_name = 'ckpt-best.pth' if metrics.better_than(best_metrics) else 'ckpt-epoch-%03d.pth' % epoch_idx
+        if (epoch_idx+1) % cfg.TRAIN.SAVE_FREQ == 0 or metrics.better_than(best_metrics):
+            file_name = 'best-ckpt.pth' if metrics.better_than(best_metrics) else 'epoch-%03d.pth' % (epoch_idx+1)
             output_path = os.path.join(cfg.DIR.CHECKPOINTS, file_name)
             torch.save({
                 'epoch_index': epoch_idx,

@@ -26,6 +26,9 @@ from core.train import train_net
 from core.test import test_net
 from core.inference import inference_net
 
+from tensorboardX import SummaryWriter
+
+
 
 def get_args_from_command_line():
     parser = argparse.ArgumentParser(description='The argument parser of R2Net runner')
@@ -36,6 +39,7 @@ def get_args_from_command_line():
     args = parser.parse_args()
     return args
 
+f_runner = open('1.txt')
 
 def main():
     # Get args from command line
@@ -49,6 +53,7 @@ def main():
     # Print config
     print('Use config:')
     pprint(cfg)
+    f_runner.write(str(cfg))
 
     # Set GPU to use
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.CONST.DEVICE
@@ -62,7 +67,10 @@ def main():
             sys.exit(2)
 
         if args.test:
-            test_net(cfg)
+            # test_net(cfg)
+            path = '/raid/wuruihai/GRNet_FILES/tb_log'
+            test_writer = SummaryWriter(path)
+            test_net(cfg, test_writer=test_writer)
         else:
             inference_net(cfg)
 

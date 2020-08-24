@@ -5,10 +5,11 @@
 # @Last Modified time: 2020-02-22 18:34:19
 # @Email:  cshzxie@gmail.com
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-
+import ipdb
 from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -39,8 +40,10 @@ def count_parameters(network):
 
 def get_ptcloud_img(ptcloud):
     fig = plt.figure(figsize=(8, 8))
-
+    #ptcloud = np.transpose(ptcloud, (1, 0))
+    #ipdb.set_trace()
     x, z, y = ptcloud.transpose(1, 0)
+
     ax = fig.gca(projection=Axes3D.name, adjustable='box')
     ax.axis('off')
     ax.axis('scaled')

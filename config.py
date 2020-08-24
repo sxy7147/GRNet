@@ -9,7 +9,7 @@ from easydict import EasyDict as edict
 
 __C                                              = edict()
 cfg                                              = __C
-
+# ith_box_combined/Chair-3/
 #
 # Dataset Config
 #
@@ -22,8 +22,8 @@ __C.DATASETS.SHAPENET                            = edict()
 __C.DATASETS.SHAPENET.CATEGORY_FILE_PATH         = './datasets/ShapeNet.json'
 __C.DATASETS.SHAPENET.N_RENDERINGS               = 8
 __C.DATASETS.SHAPENET.N_POINTS                   = 16384
-__C.DATASETS.SHAPENET.PARTIAL_POINTS_PATH        = '/home/SENSETIME/xiehaozhe/Datasets/ShapeNet/ShapeNetCompletion/%s/partial/%s/%s/%02d.pcd'
-__C.DATASETS.SHAPENET.COMPLETE_POINTS_PATH       = '/home/SENSETIME/xiehaozhe/Datasets/ShapeNet/ShapeNetCompletion/%s/complete/%s/%s.pcd'
+__C.DATASETS.SHAPENET.PARTIAL_POINTS_PATH        = '/raid/wuruihai/GRNet_FILES/xkh/ShapeNetCompletion/%s/partial/%s/%s/%02d.pcd'
+__C.DATASETS.SHAPENET.COMPLETE_POINTS_PATH       = '/raid/wuruihai/GRNet_FILES/xkh/ShapeNetCompletion/%s/complete/%s/%s.pcd'
 __C.DATASETS.KITTI                               = edict()
 __C.DATASETS.KITTI.CATEGORY_FILE_PATH            = './datasets/KITTI.json'
 __C.DATASETS.KITTI.PARTIAL_POINTS_PATH           = '/home/SENSETIME/xiehaozhe/Datasets/KITTI/cars/%s.pcd'

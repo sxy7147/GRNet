@@ -96,9 +96,11 @@ class IO:
     # Support PCD files without compression ONLY!
     @classmethod
     def _read_pcd(cls, file_path):
+        # 走的是第一个分支
         if mc_client is None:
             pc = open3d.io.read_point_cloud(file_path)
             ptcloud = np.array(pc.points)
+            # 这边的ptcloud就是最终返回值
         else:
             pyvector = mc.pyvector()
             mc_client.Get(file_path, pyvector)
