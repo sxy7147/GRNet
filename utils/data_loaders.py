@@ -10,6 +10,7 @@ import logging
 import numpy as np
 import random
 import torch.utils.data.dataset
+import os
 
 import utils.data_transforms
 
@@ -17,6 +18,7 @@ from enum import Enum, unique
 from tqdm import tqdm
 
 from utils.io import IO
+
 
 
 @unique
@@ -55,14 +57,16 @@ class Dataset(torch.utils.data.dataset.Dataset):
     def __len__(self):
         return len(self.file_list)
 
-    def __getitem__(self, idx):
+    # 最终目标，是要__getitem__的返回值一致
+    '''
+    def __getitem2__(self, idx):
         sample = self.file_list[idx]
         data = {}
         rand_idx = -1
         if 'n_renderings' in self.options:
             rand_idx = random.randint(0, self.options['n_renderings'] - 1) if self.options['shuffle'] else 0
 
-        for ri in self.options['required_items']:
+        for ri in self.options['required_items']:  # 'partial' & 'gt'
             file_path = sample['%s_path' % ri]
             if type(file_path) == list:
                 file_path = file_path[rand_idx]
@@ -74,6 +78,29 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
+    '''
+    
+    def __getitem__(self, idx):
+        sample = self.file_list[idx]
+        # print("sample: ", sample)
+        data = {}
+        rand_idx = -1
+
+        if 'n_renderings' in self.options:
+            rand_idx = random.randint(0, self.options['n_renderings'] - 1) if self.options['shuffle'] else 0
+        
+        for ri in self.options['required_items']:  # 'partial' & 'gt'
+            file_path = sample['%s_path' % ri]  # 路径
+            # print("file_path: ",file_path)
+            content = np.load(file_path)
+            data[ri] = content['arr_0'].astype(np.float32)
+
+        if self.transforms is not None:
+            data = self.transforms(data)
+
+        return sample['taxonomy_id'], sample['model_id'], data
+
+
 
 
 class ShapeNetDataLoader(object):
@@ -85,10 +112,15 @@ class ShapeNetDataLoader(object):
         with open(cfg.DATASETS.SHAPENET.CATEGORY_FILE_PATH) as f:
             self.dataset_categories = json.loads(f.read())
 
+    # subset: utils.data_loaders.DatasetSubset.TEST， 即test对应的编号1
+    # 返回值就是数据，是个三元组
+    # 应该只需要修改filelist即可, 返回值也成为 4-keys dictionary, 也可以另成一套流程吧
     def get_dataset(self, subset):
         n_renderings = self.cfg.DATASETS.SHAPENET.N_RENDERINGS if subset == DatasetSubset.TRAIN else 1
-        file_list = self._get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        # _get_file_list的返回值是个字典，key: {'taxonomy_id', 'model_id', 'partial_cloud_path', 'gtcloud_path'}
         transforms = self._get_transforms(self.cfg, subset)
+
         return Dataset({
             'required_items': ['partial_cloud', 'gtcloud'],
             'shuffle': subset == DatasetSubset.TRAIN
@@ -133,8 +165,10 @@ class ShapeNetDataLoader(object):
         """Prepare file list for the dataset"""
         file_list = []
 
-        for dc in self.dataset_categories:
+        # 确定类别.  dataset_categories中airplane, chair…… 每类以字典形式存储
+        for dc in self.dataset_categories:  
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
+            # 确定samples是train/test/val的file_name
             samples = dc[subset]
 
             for s in tqdm(samples, leave=False):
@@ -154,6 +188,27 @@ class ShapeNetDataLoader(object):
         logging.info('Complete collecting files of the dataset. Total files: %d' % len(file_list))
         return file_list
 
+    def _zy_get_file_list(self, cfg, subset, n_renderings=1):
+        """Prepare file list for the dataset"""
+        file_list = []
+        # try改成subset
+        part_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/partial/' + subset + '/'  # 再说，要修改
+        gt_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/full/' + subset + '/'  # 再说，要修改
+
+        for root,dirs,files in os.walk(part_path):
+            for file in files:
+                print("file's name: ", file)
+                file_id = os.path.splitext(file)[0]
+                file_list.append({  'taxonomy_id': '03001627', 
+                                    'model_id': file_id,
+                                    'partial_cloud_path': part_path+file,
+                                    'gtcloud_path': gt_path+file})
+        
+        return file_list
+
+
+
+
 
 class ShapeNetCarsDataLoader(ShapeNetDataLoader):
     def __init__(self, cfg):
@@ -161,6 +216,8 @@ class ShapeNetCarsDataLoader(ShapeNetDataLoader):
 
         # Remove other categories except cars
         self.dataset_categories = [dc for dc in self.dataset_categories if dc['taxonomy_id'] == '02958343']
+
+
 
 
 class Completion3DDataLoader(object):
@@ -173,11 +230,8 @@ class Completion3DDataLoader(object):
         with open(cfg.DATASETS.COMPLETION3D.CATEGORY_FILE_PATH) as f:
             self.dataset_categories = json.loads(f.read())
 
-    # subset: utils.data_loaders.DatasetSubset.TEST， 即test对应的编号1
-    # 返回值就是数据，是个三元组
-    # 应该只需要修改filelist即可, 返回值也成为 4-keys dictionary, 也可以另成一套流程吧
+    
     def get_dataset(self, subset):  # get_dataset(self,1)
-        # _get_file_list的返回值是个字典，key: {'taxonomy_id', 'model_id', 'partial_cloud_path', 'gtcloud_path'}
         file_list = self._get_file_list(self.cfg, self._get_subset(subset))   # _get_file_list(cfg,'test')
         transforms = self._get_transforms(self.cfg, subset)
         required_items = ['partial_cloud'] if subset == DatasetSubset.TEST else ['partial_cloud', 'gtcloud']
@@ -246,6 +300,7 @@ class Completion3DDataLoader(object):
         return file_list
 
 
+
 class KittiDataLoader(object):
     def __init__(self, cfg):
         self.cfg = cfg
@@ -295,6 +350,7 @@ class KittiDataLoader(object):
         """Prepare file list for the dataset"""
         file_list = []
 
+        # dc是种类
         for dc in self.dataset_categories:
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
             samples = dc[subset]
@@ -309,6 +365,7 @@ class KittiDataLoader(object):
 
         logging.info('Complete collecting files of the dataset. Total files: %d' % len(file_list))
         return file_list
+
 
 
 # //////////////////////////////////////////// = Dataset Loader Mapping = //////////////////////////////////////////// #

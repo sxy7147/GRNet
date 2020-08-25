@@ -89,35 +89,40 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             category_metrics[taxonomy_id].update(_metrics)
 
             plt.figure()
+
+            sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
+            sparse_ptcloud_img = utils.helpers.get_ptcloud_img(sparse_ptcloud)
+            matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_sps.png' % (model_idx, model_id),
+                                    sparse_ptcloud_img)
+
+            dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
+            dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
+            matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_dns.png' % (model_idx, model_id),
+                                    dense_ptcloud_img)
+
+            gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
+            gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
+            matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_gt.png' % (model_idx, model_id),
+                                    gt_ptcloud_img)
+
+
             if model_idx in range(510, 600):
 
                 now_num=model_idx-499
                 # if test_writer is not None and model_idx < 3:
                 sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
                 sparse_ptcloud_img = utils.helpers.get_ptcloud_img(sparse_ptcloud)
-                '''plt.subplot(10, 3, 3*now_num-2)
-                plt.imshow(sparse_ptcloud_img)
-                plt.xticks([])
-                plt.yticks([])'''
-                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results/%s_%s_sps.png'%(model_idx,model_id), sparse_ptcloud_img)
+                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_sps.png'%(model_idx,model_id), sparse_ptcloud_img)
 
                 dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
                 dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
-                '''plt.subplot(10, 3, 3 * now_num - 1)
-                plt.imshow(dense_ptcloud_img)
-                plt.xticks([])
-                plt.yticks([])'''
-                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results/%s_%s_dns.png' % (model_idx, model_id),
+                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_dns.png' % (model_idx, model_id),
                                         dense_ptcloud_img)
 
 
                 gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
                 gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
-                '''plt.subplot(10, 3, 3 * now_num )
-                plt.imshow(gt_ptcloud_img)
-                plt.xticks([])
-                plt.yticks([])'''
-                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results/%s_%s_gt.png'%(model_idx,model_id), gt_ptcloud_img)
+                matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_gt.png'%(model_idx,model_id), gt_ptcloud_img)
 
 
                 '''

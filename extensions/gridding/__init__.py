@@ -39,9 +39,12 @@ class Gridding(torch.nn.Module):
     def forward(self, ptcloud):
         ptcloud = ptcloud * self.scale
         _ptcloud = torch.split(ptcloud, 1, dim=0)
+        # print("_ptcloud: ",_ptcloud)
         grids = []
         for p in _ptcloud:
+            # print("p: ",p)
             non_zeros = torch.sum(p, dim=2).ne(0)
+            # print("non_zeros: ", non_zeros)
             p = p[non_zeros].unsqueeze(dim=0)
             grids.append(GriddingFunction.apply(self.scale, p))
 
