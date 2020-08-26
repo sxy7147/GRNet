@@ -106,11 +106,15 @@ def train_net(cfg):
 
         batch_end_time = time()
         n_batches = len(train_data_loader)
+        # f = open("/home/wuruihai/GRNet/tmp.txt", 'w')
         for batch_idx, (taxonomy_ids, model_ids, data) in enumerate(train_data_loader):
             data_time.update(time() - batch_end_time)
             for k, v in data.items():
                 data[k] = utils.helpers.var_or_cuda(v)
-
+            # f.write('\n\n' + str(data))
+            # f.write('\n' + str(data['partial_cloud'].shape))
+            # f.write('\n' + str(data['gtcloud'].shape))
+            # print(data)
             sparse_ptcloud, dense_ptcloud = grnet(data)
             sparse_loss = chamfer_dist(sparse_ptcloud, data['gtcloud'])
             dense_loss = chamfer_dist(dense_ptcloud, data['gtcloud'])
@@ -135,6 +139,8 @@ def train_net(cfg):
         epoch_end_time = time()
         train_writer.add_scalar('Loss/Epoch/Sparse', losses.avg(0), epoch_idx)
         train_writer.add_scalar('Loss/Epoch/Dense', losses.avg(1), epoch_idx)
+        f = open("/home/wuruihai/GRNet/tmp.txt",'w')
+        f.write(str(epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in losses.avg()]))
         logging.info(
             '[Epoch %d/%d] EpochTime = %.3f (s) Losses = %s' %
             (epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in losses.avg()]))

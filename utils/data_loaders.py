@@ -58,8 +58,10 @@ class Dataset(torch.utils.data.dataset.Dataset):
         return len(self.file_list)
 
     # 最终目标，是要__getitem__的返回值一致
-    '''
-    def __getitem2__(self, idx):
+
+
+    # origin __getitem__
+    def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
         rand_idx = -1
@@ -78,8 +80,10 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
+
+
     '''
-    
+    # zy's __getitem__ 
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         # print("sample: ", sample)
@@ -94,12 +98,13 @@ class Dataset(torch.utils.data.dataset.Dataset):
             # print("file_path: ",file_path)
             content = np.load(file_path)
             data[ri] = content['arr_0'].astype(np.float32)
+            data[ri] *= 0.45
 
         if self.transforms is not None:
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-
+    '''
 
 
 
@@ -117,7 +122,8 @@ class ShapeNetDataLoader(object):
     # 应该只需要修改filelist即可, 返回值也成为 4-keys dictionary, 也可以另成一套流程吧
     def get_dataset(self, subset):
         n_renderings = self.cfg.DATASETS.SHAPENET.N_RENDERINGS if subset == DatasetSubset.TRAIN else 1
-        file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        file_list = self._get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        # file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset), n_renderings)
         # _get_file_list的返回值是个字典，key: {'taxonomy_id', 'model_id', 'partial_cloud_path', 'gtcloud_path'}
         transforms = self._get_transforms(self.cfg, subset)
 

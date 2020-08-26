@@ -63,7 +63,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
     # Testing loop
     n_samples = len(test_data_loader)
     test_losses = AverageMeter(['SparseLoss', 'DenseLoss'])
-    test_metrics = AverageMeter(Metrics.names())
+    test_metrics = AverageMeter(Metrics.names())  # 'F-score, CD
     category_metrics = dict()
 
 
@@ -81,7 +81,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             sparse_loss = chamfer_dist(sparse_ptcloud, data['gtcloud'])
             dense_loss = chamfer_dist(dense_ptcloud, data['gtcloud'])
             test_losses.update([sparse_loss.item() * 1000, dense_loss.item() * 1000])
-            _metrics = Metrics.get(dense_ptcloud, data['gtcloud'])
+            _metrics = Metrics.get(dense_ptcloud, data['gtcloud']) # return: values
             test_metrics.update(_metrics)
 
             if taxonomy_id not in category_metrics:
@@ -105,34 +105,32 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_gt.png' % (model_idx, model_id),
                                     gt_ptcloud_img)
 
-
+            '''
             if model_idx in range(510, 600):
 
                 now_num=model_idx-499
                 # if test_writer is not None and model_idx < 3:
-                sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
+                # sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
+                sparse_ptcloud = sparse_ptcloud.squeeze().numpy()
                 sparse_ptcloud_img = utils.helpers.get_ptcloud_img(sparse_ptcloud)
                 matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_sps.png'%(model_idx,model_id), sparse_ptcloud_img)
 
-                dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
+                # dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
+                dense_ptcloud = dense_ptcloud.squeeze().numpy()
                 dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
                 matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_dns.png' % (model_idx, model_id),
                                         dense_ptcloud_img)
 
 
-                gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
+                # gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
+                gt_ptcloud = data['gtcloud'].squeeze().numpy()
                 gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
                 matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_gt.png'%(model_idx,model_id), gt_ptcloud_img)
 
-
-                '''
                 cv.imwrite("/home2/wuruihai/GRNet_FILES/out3.png", sparse_ptcloud_img)
                 im = Image.fromarray(sparse_ptcloud_img).convert('RGB')
                 im.save("/home2/wuruihai/GRNet_FILES/out.jpeg")
-                '''
-
-
-                '''
+            
                 test_writer.add_image('Model%02d/SparseReconstruction' % model_idx, sparse_ptcloud_img, epoch_idx)
                 dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
                 dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
@@ -141,7 +139,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
                 gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
                 gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
                 test_writer.add_image('Model%02d/GroundTruth' % model_idx, gt_ptcloud_img, epoch_idx)
-                '''
+            '''
 
             logging.info('Test[%d/%d] Taxonomy = %s Sample = %s Losses = %s Metrics = %s' %
                          (model_idx + 1, n_samples, taxonomy_id, model_id, ['%.4f' % l for l in test_losses.val()
