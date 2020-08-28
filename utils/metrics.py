@@ -30,12 +30,12 @@ class Metrics(object):
     @classmethod
     def get(cls, pred, gt):
         _items = cls.items()
-        print("metrics_items: ", _items)
+        # print("metrics_items: ", _items)
         _values = [0] * len(_items)
         for i, item in enumerate(_items):
             eval_func = eval(item['eval_func'])
             _values[i] = eval_func(pred, gt)
-        print("metrics_values: ", _values)
+        # print("metrics_values: ", _values)
 
         return _values
 

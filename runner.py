@@ -39,7 +39,6 @@ def get_args_from_command_line():
     args = parser.parse_args()
     return args
 
-f_runner = open('1.txt')
 
 def main():
     # Get args from command line
@@ -53,7 +52,7 @@ def main():
     # Print config
     print('Use config:')
     pprint(cfg)
-    f_runner.write(str(cfg))
+    # f_runner.write(str(cfg))
 
     # Set GPU to use
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.CONST.DEVICE
@@ -62,8 +61,17 @@ def main():
     if not args.test and not args.inference:
         train_net(cfg)
     else:
+        '''
         if 'WEIGHTS' not in cfg.CONST or not os.path.exists(cfg.CONST.WEIGHTS):
             logging.error('Please specify the file path of checkpoint.')
+            sys.exit(2)
+        '''
+
+        if 'WEIGHTS' not in cfg.CONST:
+            logging.error('Please specify the file path of checkpoint.1')
+            sys.exit(2)
+        if not os.path.exists(cfg.CONST.WEIGHTS):
+            logging.error('Please specify the file path of checkpoint.2')
             sys.exit(2)
 
         if args.test:

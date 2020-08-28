@@ -43,7 +43,7 @@ __C.DATASET.TEST_DATASET                         = 'ShapeNet'
 # Constants
 #
 __C.CONST                                        = edict()
-__C.CONST.DEVICE                                 = '0'
+__C.CONST.DEVICE                                 = '3'
 __C.CONST.NUM_WORKERS                            = 8
 __C.CONST.N_INPUT_POINTS                         = 2048
 
@@ -75,7 +75,7 @@ __C.NETWORK.GRIDDING_LOSS_ALPHAS                 = [0.1]
 #
 __C.TRAIN                                        = edict()
 __C.TRAIN.BATCH_SIZE                             = 32
-__C.TRAIN.N_EPOCHS                               = 150
+__C.TRAIN.N_EPOCHS                               = 500
 __C.TRAIN.SAVE_FREQ                              = 25
 __C.TRAIN.LEARNING_RATE                          = 1e-4
 __C.TRAIN.LR_MILESTONES                          = [50]
@@ -88,3 +88,4 @@ __C.TRAIN.WEIGHT_DECAY                           = 0
 #
 __C.TEST                                         = edict()
 __C.TEST.METRIC_NAME                             = 'ChamferDistance'
+

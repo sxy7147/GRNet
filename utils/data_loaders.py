@@ -61,6 +61,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
 
     # origin __getitem__
+
+    # '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -80,24 +82,28 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
+    # '''
 
 
     '''
     # zy's __getitem__ 
     def __getitem__(self, idx):
         sample = self.file_list[idx]
-        # print("sample: ", sample)
         data = {}
         rand_idx = -1
 
         if 'n_renderings' in self.options:
             rand_idx = random.randint(0, self.options['n_renderings'] - 1) if self.options['shuffle'] else 0
-        
+
         for ri in self.options['required_items']:  # 'partial' & 'gt'
-            file_path = sample['%s_path' % ri]  # 路径
-            # print("file_path: ",file_path)
+            file_path = sample['%s_path' % ri]
+            if type(file_path) == list:
+                file_path = file_path[rand_idx]
+
             content = np.load(file_path)
-            data[ri] = content['arr_0'].astype(np.float32)
+            # print(idx, file_path)
+            # print(content['arr_0'])
+            data[ri] = (content['arr_0']).astype(np.float32)
             data[ri] *= 0.45
 
         if self.transforms is not None:
@@ -172,7 +178,12 @@ class ShapeNetDataLoader(object):
         file_list = []
 
         # 确定类别.  dataset_categories中airplane, chair…… 每类以字典形式存储
-        for dc in self.dataset_categories:  
+        for dc in self.dataset_categories:
+            # train chair only
+            '''
+            if str(dc['taxonomy_id']) != '03001627':
+                continue
+            '''
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
             # 确定samples是train/test/val的file_name
             samples = dc[subset]
@@ -184,6 +195,7 @@ class ShapeNetDataLoader(object):
                     'model_id':
                     s,
                     'partial_cloud_path': [
+                        # 8 parts
                         cfg.DATASETS.SHAPENET.PARTIAL_POINTS_PATH % (subset, dc['taxonomy_id'], s, i)
                         for i in range(n_renderings)
                     ],
@@ -201,14 +213,27 @@ class ShapeNetDataLoader(object):
         part_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/partial/' + subset + '/'  # 再说，要修改
         gt_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/full/' + subset + '/'  # 再说，要修改
 
-        for root,dirs,files in os.walk(part_path):
-            for file in files:
-                print("file's name: ", file)
-                file_id = os.path.splitext(file)[0]
-                file_list.append({  'taxonomy_id': '03001627', 
-                                    'model_id': file_id,
-                                    'partial_cloud_path': part_path+file,
-                                    'gtcloud_path': gt_path+file})
+        if subset == 'train':
+            for root, dirs, files in os.walk(gt_path):
+                for file in files:
+                    print("file's name: ", file)
+                    file_id = os.path.splitext(file)[0]
+                    file_list.append({
+                        'taxonomy_id': '03001627',
+                        'model_id': file_id,
+                        'partial_cloud_path':  # 8 parts
+                            [part_path + file_id + '_' + str(i) + '.npz' for i in range(n_renderings)],
+                        'gtcloud_path': gt_path+file})
+        else:
+            for root, dirs, files in os.walk(gt_path):
+                for file in files:
+                    print("file's name: ", file)
+                    file_id = os.path.splitext(file)[0]
+                    file_list.append({
+                        'taxonomy_id': '03001627',
+                        'model_id': file_id,
+                        'partial_cloud_path': part_path + file,
+                        'gtcloud_path': gt_path+file})
         
         return file_list
 

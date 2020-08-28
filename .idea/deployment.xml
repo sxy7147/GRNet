@@ -2,6 +2,14 @@
 <project version="4">
   <component name="PublishConfigData" autoUpload="Always" serverName="wuruihai@162.105.162.192" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
+      <paths name="wuruihai@162.105.162.19">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/wuruihai/GRNet" local="$PROJECT_DIR$" web="/" />
+            <mapping local="" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="wuruihai@162.105.162.192">
         <serverdata>
           <mappings>

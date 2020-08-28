@@ -9,6 +9,7 @@ import logging
 import torch
 import matplotlib
 import matplotlib.pyplot as plt
+import os
 # import scipy.misc
 # import cv2 as cv
 # import numpy as np
@@ -90,19 +91,24 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
 
             plt.figure()
 
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/grnet_all_ep500/'
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+
+
             sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
             sparse_ptcloud_img = utils.helpers.get_ptcloud_img(sparse_ptcloud)
-            matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_sps.png' % (model_idx, model_id),
+            matplotlib.image.imsave(save_path+'%s_sps.png' % model_id,
                                     sparse_ptcloud_img)
 
             dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
             dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
-            matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_dns.png' % (model_idx, model_id),
+            matplotlib.image.imsave(save_path+'%s_dns.png' % model_id,
                                     dense_ptcloud_img)
 
             gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
             gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
-            matplotlib.image.imsave('/home2/wuruihai/GRNet_FILES/results2/%s_%s_gt.png' % (model_idx, model_id),
+            matplotlib.image.imsave(save_path+'%s_gt.png' % model_id,
                                     gt_ptcloud_img)
 
             '''

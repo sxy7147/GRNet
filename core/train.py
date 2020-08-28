@@ -50,9 +50,13 @@ def train_net(cfg):
                                                   shuffle=False)
 
     # Set up folders for logs and checkpoints
-    output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', datetime.now().isoformat())
+    output_dir = os.path.join(cfg.DIR.OUT_PATH, '%s', datetime.now().isoformat())  # output_dir
     cfg.DIR.CHECKPOINTS = output_dir % 'checkpoints'
     cfg.DIR.LOGS = output_dir % 'logs'
+    txt_dir = output_dir % 'txt'
+    if not os.path.exists(txt_dir):
+        os.makedirs(txt_dir)
+    f_record = open(txt_dir+'/record.txt', 'w')
     if not os.path.exists(cfg.DIR.CHECKPOINTS):
         os.makedirs(cfg.DIR.CHECKPOINTS)
 
@@ -95,6 +99,7 @@ def train_net(cfg):
         logging.info('Recover complete. Current epoch = #%d; best metrics = %s.' % (init_epoch, best_metrics))
 
     # Training/Testing the network
+    first_epoch = True
     for epoch_idx in range(init_epoch + 1, cfg.TRAIN.N_EPOCHS + 1):
         epoch_start_time = time()
 
@@ -106,15 +111,10 @@ def train_net(cfg):
 
         batch_end_time = time()
         n_batches = len(train_data_loader)
-        # f = open("/home/wuruihai/GRNet/tmp.txt", 'w')
         for batch_idx, (taxonomy_ids, model_ids, data) in enumerate(train_data_loader):
             data_time.update(time() - batch_end_time)
             for k, v in data.items():
                 data[k] = utils.helpers.var_or_cuda(v)
-            # f.write('\n\n' + str(data))
-            # f.write('\n' + str(data['partial_cloud'].shape))
-            # f.write('\n' + str(data['gtcloud'].shape))
-            # print(data)
             sparse_ptcloud, dense_ptcloud = grnet(data)
             sparse_loss = chamfer_dist(sparse_ptcloud, data['gtcloud'])
             dense_loss = chamfer_dist(dense_ptcloud, data['gtcloud'])
@@ -131,6 +131,11 @@ def train_net(cfg):
 
             batch_time.update(time() - batch_end_time)
             batch_end_time = time()
+            ###
+
+            f_record.write('\n[Epoch %d/%d][Batch %d/%d] BatchTime = %.3f (s) DataTime = %.3f (s) Losses = %s' %
+                         (epoch_idx, cfg.TRAIN.N_EPOCHS, batch_idx + 1, n_batches, batch_time.val(), data_time.val(),
+                          ['%.4f' % l for l in losses.val()]))
             logging.info('[Epoch %d/%d][Batch %d/%d] BatchTime = %.3f (s) DataTime = %.3f (s) Losses = %s' %
                          (epoch_idx, cfg.TRAIN.N_EPOCHS, batch_idx + 1, n_batches, batch_time.val(), data_time.val(),
                           ['%.4f' % l for l in losses.val()]))
@@ -139,17 +144,30 @@ def train_net(cfg):
         epoch_end_time = time()
         train_writer.add_scalar('Loss/Epoch/Sparse', losses.avg(0), epoch_idx)
         train_writer.add_scalar('Loss/Epoch/Dense', losses.avg(1), epoch_idx)
-        f = open("/home/wuruihai/GRNet/tmp.txt",'w')
-        f.write(str(epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in losses.avg()]))
+        f_record.write('\n[Epoch %d/%d] EpochTime = %.3f (s) Losses = %s' %
+            (epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in losses.avg()]))
         logging.info(
             '[Epoch %d/%d] EpochTime = %.3f (s) Losses = %s' %
             (epoch_idx, cfg.TRAIN.N_EPOCHS, epoch_end_time - epoch_start_time, ['%.4f' % l for l in losses.avg()]))
 
+
+
+
         # Validate the current model
-        metrics = test_net(cfg, epoch_idx, val_data_loader, val_writer, grnet)
+        # if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0:
+            # metrics = test_net(cfg, epoch_idx, val_data_loader, val_writer, grnet)
+
 
         # Save ckeckpoints
-        if (epoch_idx+1) % cfg.TRAIN.SAVE_FREQ == 0 or metrics.better_than(best_metrics):
+        # if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0 or metrics.better_than(best_metrics):
+
+        if first_epoch:
+            metrics = test_net(cfg, epoch_idx, val_data_loader, val_writer, grnet)
+            best_metrics = metrics
+            first_epoch = False
+
+        if epoch_idx % cfg.TRAIN.SAVE_FREQ == 0:
+            metrics = test_net(cfg, epoch_idx, val_data_loader, val_writer, grnet)
             file_name = 'best-ckpt.pth' if metrics.better_than(best_metrics) else 'epoch-%03d.pth' % (epoch_idx+1)
             output_path = os.path.join(cfg.DIR.CHECKPOINTS, file_name)
             torch.save({
