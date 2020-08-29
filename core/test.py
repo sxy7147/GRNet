@@ -91,16 +91,19 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             category_metrics[taxonomy_id].update(_metrics)
 
 
-            save_path = '/home2/wuruihai/GRNet_FILES/Results/zy_chair_ep150_npz/'
+            # train时不用存数据
+            '''
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/grnet_all_ep150/'
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
 
             # 只存了 final results (dense_ptcloud)
-            save_npz_path = save_path+'part_7/'
+            save_npz_path = save_path+'part_1/'
             if not os.path.exists(save_npz_path):
                 os.makedirs(save_npz_path)
             dense_pts = np.array(dense_ptcloud.cpu())
             np.savez(save_npz_path + '%s.npz' % model_id, pts = dense_pts)
+            '''
 
             '''
             plt.figure()

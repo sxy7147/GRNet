@@ -62,7 +62,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     # origin __getitem__
 
-    '''
+    # '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -73,7 +73,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         for ri in self.options['required_items']:  # 'partial' & 'gt'
             file_path = sample['%s_path' % ri]
             if type(file_path) == list:
-                file_path = file_path[rand_idx]
+                file_path = file_path[1]
 
             # 返回值是三维坐标的列表(np)
             data[ri] = IO.get(file_path).astype(np.float32)
@@ -82,13 +82,13 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    '''
+    # '''
 
 
 
     # zy's __getitem__
 
-    # '''
+    '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -102,7 +102,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             # 得到8views的output: test8次，每次从random变成固定一个view
             if type(file_path) == list:  # partial, random choose
                 # file_path = file_path[rand_idx]
-                file_path = file_path[7]
+                file_path = file_path[rand_idx]
 
 
             content = np.load(file_path)
@@ -115,7 +115,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    # '''
+    '''
 
 
 
@@ -132,11 +132,13 @@ class ShapeNetDataLoader(object):
     # 返回值就是数据，是个三元组
     # 应该只需要修改filelist即可, 返回值也成为 4-keys dictionary, 也可以另成一套流程吧
     def get_dataset(self, subset):
-        # n_renderings = self.cfg.DATASETS.SHAPENET.N_RENDERINGS if subset == DatasetSubset.TRAIN else 1
+        n_renderings = self.cfg.DATASETS.SHAPENET.N_RENDERINGS if subset == DatasetSubset.TRAIN else 1
+        '''
         if subset == DatasetSubset.TRAIN or subset ==DatasetSubset.TEST:
             n_renderings = self.cfg.DATASETS.SHAPENET.N_RENDERINGS
-        # file_list = self._get_file_list(self.cfg, self._get_subset(subset), n_renderings)
-        file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        '''
+        file_list = self._get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        # file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset), n_renderings)
         # _get_file_list的返回值是个字典，key: {'taxonomy_id', 'model_id', 'partial_cloud_path', 'gtcloud_path'}
         transforms = self._get_transforms(self.cfg, subset)
 
@@ -187,9 +189,10 @@ class ShapeNetDataLoader(object):
         # 确定类别.  dataset_categories中airplane, chair…… 每类以字典形式存储
         for dc in self.dataset_categories:
             # train chair only
-
+            '''
             if str(dc['taxonomy_id']) != '03001627':
                 continue
+            '''
 
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
             # 确定samples是train/test/val的file_name
