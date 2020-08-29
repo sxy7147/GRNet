@@ -10,6 +10,7 @@ import torch
 import matplotlib
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 # import scipy.misc
 # import cv2 as cv
 # import numpy as np
@@ -89,12 +90,20 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
                 category_metrics[taxonomy_id] = AverageMeter(Metrics.names())
             category_metrics[taxonomy_id].update(_metrics)
 
-            plt.figure()
 
-            save_path = '/home2/wuruihai/GRNet_FILES/Results/grnet_all_ep500/'
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/zy_chair_ep150_npz/'
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
 
+            # 只存了 final results (dense_ptcloud)
+            save_npz_path = save_path+'part_7/'
+            if not os.path.exists(save_npz_path):
+                os.makedirs(save_npz_path)
+            dense_pts = np.array(dense_ptcloud.cpu())
+            np.savez(save_npz_path + '%s.npz' % model_id, pts = dense_pts)
+
+            '''
+            plt.figure()
 
             sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
             sparse_ptcloud_img = utils.helpers.get_ptcloud_img(sparse_ptcloud)
@@ -110,6 +119,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
             matplotlib.image.imsave(save_path+'%s_gt.png' % model_id,
                                     gt_ptcloud_img)
+            '''
 
             '''
             if model_idx in range(510, 600):
