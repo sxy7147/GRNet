@@ -3,7 +3,7 @@ import os
 import torch
 from chamfer_distance import ChamferDistance
 
-
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 '''  grnet的output(dense_cloud)转为2048维，再和gt(val_full_2048)计算每个part的cd，最后summary  '''
 
@@ -41,7 +41,7 @@ for view in range(8):
             gt = np.load(gt_path + file)['arr_0']
             cd1, cd2 = chamferLoss(torch.tensor(gt, dtype=torch.float32).view(n_shape, -1, 3), torch.tensor(output, dtype=torch.float32).view(n_shape, -1, 3))
             cd = ((cd1.mean() + cd2.mean()) / 2).item()
-            print(cd)
+            # print(cd)
             chamfer_dists.append(cd)
 
     '''
@@ -49,6 +49,7 @@ for view in range(8):
         print(idx, chamfer_dists[idx])
     '''
     avg_chamfer_dist.append(float(sum(chamfer_dists) / float(len(chamfer_dists))))  # avg in every views
+    print(avg_chamfer_dist[view])
 
 for view in range(8):
     print("view_%d: " % view, avg_chamfer_dist[view])

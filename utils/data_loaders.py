@@ -73,7 +73,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         for ri in self.options['required_items']:  # 'partial' & 'gt'
             file_path = sample['%s_path' % ri]
             if type(file_path) == list:
-                file_path = file_path[1]
+                file_path = file_path[rand_idx]
 
             # 返回值是三维坐标的列表(np)
             data[ri] = IO.get(file_path).astype(np.float32)
