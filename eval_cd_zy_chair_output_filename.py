@@ -7,11 +7,10 @@ import ipdb
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
-'''  grnet的output(dense_cloud)转为2048维，再和gt(val_full_2048)计算每个part的cd，最后summary  '''
+gt_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/full/val_2048/'
+# grnet_root = '/raid/wuruihai/GRNet_FILES/Results/zy_chair_ep300_2048d/'
+grnet_root = '/raid/wuruihai/GRNet_FILES/Results/zy_chair_ep150_2048d_300/'
 
-# ShapeNet, 不需要再rescale
-gt_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/full/val_2048/'   # 初始的gt
-grnet_root = '/raid/wuruihai/GRNet_FILES/Results/ShapeNet_zy_chair_npz_2048d/'  # output的16384转到2048
 
 
 # rescale
@@ -32,12 +31,11 @@ chamferLoss = ChamferDistance()
 chamfer_dists = []
 avg_chamfer_dist = []
 
-
 n_points = 2048
 n_shape = 1
 
 for view in range(8):
-    # print("------------------- view: %d ---------------------" % view)
+    print("------------------- view: %d ---------------------" % view)
     grnet_path = grnet_root + 'part_%d/' % view
     for root, dirs, files in os.walk(grnet_path):
         # ipdb.set_trace()
@@ -45,26 +43,41 @@ for view in range(8):
         all_gt = np.zeros((len_files, n_points, 3))
         all_pred = np.zeros((len_files, n_points, 3))
         idx = -1
-        # tot = 0
+        tot = 0
         for file in files:
             idx += 1
-
+            # print(idx, len_files)
             output = np.load(grnet_path + file)['pts']
-            # output = rescale_pc_parts(output, n_points) / 0.45    # rescale & 放大
             gt = np.load(gt_path + file)['arr_0']
-
+            # print(output.shape)
+            # print(gt.shape)
             all_gt[idx] = gt.reshape(2048, 3)
             all_pred[idx] = output.reshape(2048, 3)
-
-            # cd1, cd2 = chamferLoss(torch.tensor(all_gt[idx], dtype=torch.float32).view(1, 2048, 3), torch.tensor(all_pred[idx], dtype=torch.float32).view(1, 2048, 3))
-            # cd = ((cd1.mean() + cd2.mean()) / 2).item()
-            # print(cd)
-            # tot += cd
+            '''
+            cd1, cd2 = chamferLoss(torch.tensor(all_gt[idx], dtype=torch.float32).view(1, 2048, 3), torch.tensor(all_pred[idx], dtype=torch.float32).view(1, 2048, 3))
+            cd = ((cd1.mean() + cd2.mean()) / 2).item()
+            print(cd)
+            if cd > 0.01:
+                # print(file, ' , ', cd)
+                file_id = os.path.splitext(file)[0]
+                print(file_id, end=', ')
+            tot += cd
+            '''
         cd1, cd2 = chamferLoss(torch.tensor(all_gt, dtype=torch.float32), torch.tensor(all_pred, dtype=torch.float32))
         cd = ((cd1.mean() + cd2.mean()) / 2).item()
-        print("view_%d: " % view, cd)
+        print('cd: ', cd)
         # print(tot / len_files)
         chamfer_dists.append(cd)
+
+    '''
+    for idx in range(len(chamfer_dists)):
+        print(idx, chamfer_dists[idx])
+    '''
+    # avg_chamfer_dist.append(float(sum(chamfer_dists) / float(len(chamfer_dists))))  # avg in every views
+    # print(avg_chamfer_dist[view])
+
+for view in range(8):
+    print("view_%d: " % view, chamfer_dists[view])
 
 print("avg_CD: ", float(sum(chamfer_dists) / float(len(chamfer_dists))))
 

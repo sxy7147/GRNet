@@ -36,12 +36,14 @@ __C.DATASET                                      = edict()
 # Dataset Options: Completion3D, ShapeNet, ShapeNetCars, KITTI
 __C.DATASET.TRAIN_DATASET                        = 'ShapeNet'
 __C.DATASET.TEST_DATASET                         = 'ShapeNet'
+# __C.DATASET.TRAIN_DATASET                        = 'Completion3D'
+# __C.DATASET.TEST_DATASET                         = 'Completion3D'
 
 #
 # Constants
 #
 __C.CONST                                        = edict()
-__C.CONST.DEVICE                                 = '1'
+__C.CONST.DEVICE                                 = '3'
 __C.CONST.NUM_WORKERS                            = 8
 __C.CONST.N_INPUT_POINTS                         = 2048
 
@@ -49,7 +51,7 @@ __C.CONST.N_INPUT_POINTS                         = 2048
 # Directories
 #
 __C.DIR                                          = edict()
-__C.DIR.OUT_PATH                                 = './output'
+__C.DIR.OUT_PATH                                 = './output_Completion3D'
 
 #
 # Memcached
@@ -73,7 +75,7 @@ __C.NETWORK.GRIDDING_LOSS_ALPHAS                 = [0.1]
 #
 __C.TRAIN                                        = edict()
 __C.TRAIN.BATCH_SIZE                             = 32
-__C.TRAIN.N_EPOCHS                               = 150
+__C.TRAIN.N_EPOCHS                               = 500
 __C.TRAIN.SAVE_FREQ                              = 25
 __C.TRAIN.LEARNING_RATE                          = 1e-4
 __C.TRAIN.LR_MILESTONES                          = [50]

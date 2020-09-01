@@ -89,7 +89,7 @@ def train_net(cfg):
         alphas=cfg.NETWORK.GRIDDING_LOSS_ALPHAS)
 
     # Load pretrained model if exists
-    init_epoch = 0
+    init_epoch = 0   # 断点重跑
     best_metrics = None
     if 'WEIGHTS' in cfg.CONST:
         logging.info('Recovering from %s ...' % (cfg.CONST.WEIGHTS))
