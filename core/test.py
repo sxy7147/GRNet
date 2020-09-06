@@ -107,14 +107,9 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             # train时不用存数据
             # 存 npz
 
-
-            save_path = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_zy_chair_ep500_npz_16384d/'
-            save_path2 = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_zy_chair_eo500_npz_2048d/'
-
-            if not os.path.exists(save_path):
-                os.makedirs(save_path)
-            if not os.path.exists(save_path2):
-                os.makedirs(save_path2)
+            '''
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_zy_chair_ep500_npz_16384d/'
+            save_path2 = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_zy_chair_eo500_npz_2048d/'
 
             part_name = 'part_7'
 
@@ -132,36 +127,35 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             dense_pts2 /= 0.45
             np.savez(save_npz_path + '%s.npz' % model_id, pts = dense_pts)
             np.savez(save_npz_path2 + '%s.npz' % model_id, pts = dense_pts2)
-
-
-
-
-
             '''
-            # 存npz (GRNet's data),  Completion3D
 
-            save_path = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_zy_data_ep150_npz/part_7/'
+
+
+            # 存npz (GRNet's data),  Completion3D
+            '''
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_zy_data_ep500_npz/part_7/'
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
             dense_pts = np.array(dense_ptcloud.cpu()) # 自己的数据集就不用缩放了
             np.savez(save_path + '%s.npz' % model_id, pts=dense_pts)
-            
             '''
 
 
 
             # 存 png
-            '''
-            save_path = '/home2/wuruihai/GRNet_FILES/Results/grnet_model_png/'
+            # '''
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_zy_chair_ep500_part0_16384d_png/'
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
 
             plt.figure()
 
+            ''''
             pc_ptcloud = data['partial_cloud'].squeeze().cpu().numpy()
             pc_ptcloud_img = utils.helpers.get_ptcloud_img(pc_ptcloud)
             matplotlib.image.imsave(save_path + '%s_1_pc.png' % model_id,
                                     pc_ptcloud_img)
+            '''
 
             
             # sparse_ptcloud = sparse_ptcloud.squeeze().cpu().numpy()
@@ -175,11 +169,13 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             matplotlib.image.imsave(save_path+'%s_2_dns.png' % model_id,
                                     dense_ptcloud_img)
 
+            '''
             gt_ptcloud = data['gtcloud'].squeeze().cpu().numpy()
             gt_ptcloud_img = utils.helpers.get_ptcloud_img(gt_ptcloud)
             matplotlib.image.imsave(save_path+'%s_3_gt.png' % model_id,
                                     gt_ptcloud_img)
             '''
+            # '''
 
 
 

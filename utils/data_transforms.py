@@ -27,7 +27,8 @@ class Compose(object):
         for tr in self.transformers:
             transform = tr['callback']
             objects = tr['objects']
-            rnd_value = np.random.uniform(0, 1)
+            self.uniform = np.random.uniform(0, 1)
+            rnd_value = self.uniform
             if transform.__class__ in [NormalizeObjectPose]:
                 data = transform(data)
             else:

@@ -10,8 +10,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 '''  grnet的output(dense_cloud)转为2048维，再和gt(val_full_2048)计算每个part的cd，最后summary  '''
 
 # ShapeNet, 不需要再rescale
-gt_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/full/val_2048/'   # 初始的gt
-grnet_root = '/raid/wuruihai/GRNet_FILES/Results/ShapeNet_zy_chair_npz_2048d/'  # output的16384转到2048
+gt_path = '/raid/wuruihai/GRNet_FILES/zy/Completion3D/full/val/'   # 初始的gt
+grnet_root = '/raid/wuruihai/GRNet_FILES/Results/Completion3D_zy_data_ep500_npz/'  # output的16384转到2048
 
 
 # rescale
@@ -50,7 +50,7 @@ for view in range(8):
             idx += 1
 
             output = np.load(grnet_path + file)['pts']
-            # output = rescale_pc_parts(output, n_points) / 0.45    # rescale & 放大
+            output = rescale_pc_parts(output, n_points) / 0.45    # rescale & 放大
             gt = np.load(gt_path + file)['arr_0']
 
             all_gt[idx] = gt.reshape(2048, 3)

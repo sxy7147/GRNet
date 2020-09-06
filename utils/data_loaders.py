@@ -62,7 +62,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     # origin __getitem__
 
-    '''
+    # '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -78,17 +78,19 @@ class Dataset(torch.utils.data.dataset.Dataset):
             # 返回值是三维坐标的列表(np)
             data[ri] = IO.get(file_path).astype(np.float32)
 
+        # print('data\'s shape: ', data['partial_cloud'].shape)
+
         if self.transforms is not None:
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    '''
+    # '''
 
 
 
     # zy's __getitem__
 
-    # '''
+    '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -104,7 +106,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             # 得到8views的output: test8次，每次从random变成固定一个view
             if type(file_path) == list:  # partial, random choose
                 # file_path = file_path[rand_idx]
-                file_path = file_path[7]
+                file_path = file_path[0]
 
             content = np.load(file_path)
             data[ri] = (content['arr_0']).astype(np.float32)
@@ -114,7 +116,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    # '''
+    '''
 
 
 
@@ -134,8 +136,8 @@ class ShapeNetDataLoader(object):
         # n_renderings = self.cfg.DATASETS.SHAPENET.N_RENDERINGS if subset == DatasetSubset.TRAIN else 1
         n_renderings = self.cfg.DATASETS.SHAPENET.N_RENDERINGS  # 我们的dataset中，train/test/val的partial都是8个views
 
-        # file_list = self._get_file_list(self.cfg, self._get_subset(subset), n_renderings)
-        file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        file_list = self._get_file_list(self.cfg, self._get_subset(subset), n_renderings)
+        # file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset), n_renderings)
         transforms = self._get_transforms(self.cfg, subset)
 
         return Dataset({
@@ -216,8 +218,8 @@ class ShapeNetDataLoader(object):
         """Prepare file list for the dataset"""
         file_list = []
         # try改成subset
-        part_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/partial/' + subset + '/'  # 再说，要修改
-        gt_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/full/' + subset + '/'  # 再说，要修改
+        part_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/partial/' + subset + '/'
+        gt_path = '/raid/wuruihai/GRNet_FILES/zy/ShapeNetCompletion/full/' + subset + '/'
 
         # if subset == 'train':
         for root, dirs, files in os.walk(gt_path):

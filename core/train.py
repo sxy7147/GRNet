@@ -112,6 +112,7 @@ def train_net(cfg):
         batch_end_time = time()
         n_batches = len(train_data_loader)
         for batch_idx, (taxonomy_ids, model_ids, data) in enumerate(train_data_loader):
+            print('batch_size: ', data['partial_cloud'].shape)
             data_time.update(time() - batch_end_time)
             for k, v in data.items():
                 data[k] = utils.helpers.var_or_cuda(v)

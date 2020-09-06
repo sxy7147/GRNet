@@ -110,7 +110,7 @@ class GRNet(torch.nn.Module):
 
     def forward(self, data):
         partial_cloud = data['partial_cloud']
-        # print(partial_cloud.size())     # torch.Size([batch_size, 2048, 3])
+        print('forward\'s shape: ', partial_cloud.size())     # torch.Size([batch_size, 2048, 3])
         pt_features_64_l = self.gridding(partial_cloud).view(-1, 1, 64, 64, 64)
         # print(pt_features_64_l.size())  # torch.Size([batch_size, 1, 64, 64, 64])
         pt_features_32_l = self.conv1(pt_features_64_l)
