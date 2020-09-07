@@ -11,7 +11,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 # ShapeNet, 不需要再rescale
 gt_path = '/raid/wuruihai/GRNet_FILES/zy/Completion3D/full/val/'   # 初始的gt
-grnet_root = '/raid/wuruihai/GRNet_FILES/Results/Completion3D_zy_data_ep500_npz/'  # output的16384转到2048
+grnet_root = '/raid/wuruihai/GRNet_FILES/Results/ShapeNet_zy_chair_ep500_npz_2048d/'  # output的16384转到2048
 
 
 # rescale
@@ -50,7 +50,7 @@ for view in range(8):
             idx += 1
 
             output = np.load(grnet_path + file)['pts']
-            output = rescale_pc_parts(output, n_points) / 0.45    # rescale & 放大
+            # output = rescale_pc_parts(output, n_points)     # rescale & 放大
             gt = np.load(gt_path + file)['arr_0']
 
             all_gt[idx] = gt.reshape(2048, 3)

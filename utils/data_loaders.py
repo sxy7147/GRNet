@@ -62,7 +62,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     # origin __getitem__
 
-    # '''
+    '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -84,13 +84,13 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    # '''
+    '''
 
 
 
     # zy's __getitem__
 
-    '''
+    # '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -116,7 +116,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    '''
+    # '''
 
 
 
