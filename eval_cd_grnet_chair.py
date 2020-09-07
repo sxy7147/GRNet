@@ -65,7 +65,7 @@ for view in range(1):
 
         print(tot / len_files)
         cd1, cd2 = chamferLoss(torch.tensor(all_gt, dtype = torch.float32), torch.tensor(all_pred, dtype = torch.float32))
-        cd = ((cd1.mean() + cd2.mean()) / 2 ).item()
+        cd = ((cd1.sqrt().mean() + cd2.sqrt().mean()) / 2 ).item()
         print(cd)
 
 
