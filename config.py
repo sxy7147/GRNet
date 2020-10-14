@@ -16,8 +16,8 @@ cfg                                              = __C
 __C.DATASETS                                     = edict()
 __C.DATASETS.COMPLETION3D                        = edict()
 __C.DATASETS.COMPLETION3D.CATEGORY_FILE_PATH     = './datasets/Completion3D.json'
-__C.DATASETS.COMPLETION3D.PARTIAL_POINTS_PATH    = '/home/SENSETIME/xiehaozhe/Datasets/Completion3D/%s/partial/%s/%s.h5'
-__C.DATASETS.COMPLETION3D.COMPLETE_POINTS_PATH   = '/home/SENSETIME/xiehaozhe/Datasets/Completion3D/%s/gt/%s/%s.h5'
+__C.DATASETS.COMPLETION3D.PARTIAL_POINTS_PATH    = '/raid/wuruihai/GRNet_FILES/xkh/Completion3D/%s/partial/%s/%s.h5'
+__C.DATASETS.COMPLETION3D.COMPLETE_POINTS_PATH   = '/raid/wuruihai/GRNet_FILES/xkh/Completion3D/%s/gt/%s/%s.h5'
 __C.DATASETS.SHAPENET                            = edict()
 __C.DATASETS.SHAPENET.CATEGORY_FILE_PATH         = './datasets/ShapeNet.json'
 __C.DATASETS.SHAPENET.N_RENDERINGS               = 8
@@ -43,7 +43,7 @@ __C.DATASET.TEST_DATASET                         = 'ShapeNet'
 # Constants
 #
 __C.CONST                                        = edict()
-__C.CONST.DEVICE                                 = '3'
+__C.CONST.DEVICE                                 = '0'
 __C.CONST.NUM_WORKERS                            = 8
 __C.CONST.N_INPUT_POINTS                         = 2048
 
@@ -75,8 +75,8 @@ __C.NETWORK.GRIDDING_LOSS_ALPHAS                 = [0.1]
 #
 __C.TRAIN                                        = edict()
 __C.TRAIN.BATCH_SIZE                             = 32
-__C.TRAIN.N_EPOCHS                               = 500
-__C.TRAIN.SAVE_FREQ                              = 25
+__C.TRAIN.N_EPOCHS                               = 300
+__C.TRAIN.SAVE_FREQ                              = 5
 __C.TRAIN.LEARNING_RATE                          = 1e-4
 __C.TRAIN.LR_MILESTONES                          = [50]
 __C.TRAIN.GAMMA                                  = .5

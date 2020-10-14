@@ -62,18 +62,20 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     # origin __getitem__
 
-    '''
+    # '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
-        rand_idx = -1
-        if 'n_renderings' in self.options:
-            rand_idx = random.randint(0, self.options['n_renderings'] - 1) if self.options['shuffle'] else 0
+        # rand_idx = -1
+        # if 'n_renderings' in self.options:
+        rand_idx = random.randint(0, 8 - 1) if self.options['shuffle'] else 0
+        # print('rand_idx2: ', rand_idx)
 
         for ri in self.options['required_items']:  # 'partial' & 'gt'
             file_path = sample['%s_path' % ri]
             if type(file_path) == list:
                 file_path = file_path[rand_idx]
+                # print('rand_idx1: ', rand_idx)
 
             # 返回值是三维坐标的列表(np)
             data[ri] = IO.get(file_path).astype(np.float32)
@@ -84,13 +86,13 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    '''
+    # '''
 
 
 
     # zy's __getitem__
 
-    # '''
+    '''
     def __getitem__(self, idx):
         sample = self.file_list[idx]
         data = {}
@@ -116,7 +118,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data = self.transforms(data)
 
         return sample['taxonomy_id'], sample['model_id'], data
-    # '''
+    '''
 
 
 
@@ -188,8 +190,9 @@ class ShapeNetDataLoader(object):
         for dc in self.dataset_categories:
             # train chair only
 
-            if str(dc['taxonomy_id']) != '03001627':
-                continue
+            # if str(dc['taxonomy_id']) != '03001627':
+            #     continue
+
 
 
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
@@ -260,11 +263,11 @@ class Completion3DDataLoader(object):
 
     
     def get_dataset(self, subset):  # get_dataset(self,1)
-        # file_list = self._get_file_list(self.cfg, self._get_subset(subset))   # _get_file_list(cfg,'test')
-        file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset))
+        file_list = self._get_file_list(self.cfg, self._get_subset(subset))   # _get_file_list(cfg,'test')
+        # file_list = self._zy_get_file_list(self.cfg, self._get_subset(subset))
         transforms = self._get_transforms(self.cfg, subset)
-        # required_items = ['partial_cloud'] if subset == DatasetSubset.TEST else ['partial_cloud', 'gtcloud']
-        required_items = ['partial_cloud', 'gtcloud']
+        required_items = ['partial_cloud'] if subset == DatasetSubset.TEST else ['partial_cloud', 'gtcloud']
+        # required_items = ['partial_cloud', 'gtcloud']
 
         return Dataset({
             'required_items': required_items,
@@ -311,6 +314,11 @@ class Completion3DDataLoader(object):
         file_list = []
 
         for dc in self.dataset_categories:
+
+            # only train taxonomy-chair
+            # if str(dc['taxonomy_id']) != '03001627':
+            #     continue
+
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
             samples = dc[subset]  # 每个循环，sample就是该类的数据
 
@@ -397,7 +405,6 @@ class KittiDataLoader(object):
     def _get_file_list(self, cfg, subset):
         """Prepare file list for the dataset"""
         file_list = []
-
         # dc是种类
         for dc in self.dataset_categories:
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))

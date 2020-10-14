@@ -25,15 +25,27 @@ class Metrics(object):
         'eval_object': ChamferDistance(ignore_zeros=True),
         'is_greater_better': False,
         'init_value': 32767
+    }, {
+        'name': 'precision',
+        'enabled': True,
+        'eval_func': 'cls._get_precision',
+        'is_greater_better': True,
+        'init_value': 0
+    }, {
+        'name': 'recall',
+        'enabled': True,
+        'eval_func': 'cls._get_recall',
+        'is_greater_better': True,
+        'init_value': 0
     }]
 
     @classmethod
     def get(cls, pred, gt):
-        _items = cls.items()
+        _items = cls.items() # items 出 dict的每项
         # print("metrics_items: ", _items)
         _values = [0] * len(_items)
         for i, item in enumerate(_items):
-            eval_func = eval(item['eval_func'])
+            eval_func = eval(item['eval_func'])  # eval F & CD: eval执行字符串的表达式并返回
             _values[i] = eval_func(pred, gt)
         # print("metrics_values: ", _values)
 
@@ -60,6 +72,28 @@ class Metrics(object):
         recall = float(sum(d < th for d in dist2)) / float(len(dist2))
         precision = float(sum(d < th for d in dist1)) / float(len(dist1))
         return 2 * recall * precision / (recall + precision) if recall + precision else 0
+
+    @classmethod
+    def _get_precision(cls, pred, gt, th=0.01):
+        """References: https://github.com/lmb-freiburg/what3d/blob/master/util.py"""
+        pred = cls._get_open3d_ptcloud(pred)
+        gt = cls._get_open3d_ptcloud(gt)
+
+        dist1 = pred.compute_point_cloud_distance(gt)
+
+        precision = float(sum(d < th for d in dist1)) / float(len(dist1))
+        return precision
+
+    @classmethod
+    def _get_recall(cls, pred, gt, th=0.01):
+        """References: https://github.com/lmb-freiburg/what3d/blob/master/util.py"""
+        pred = cls._get_open3d_ptcloud(pred)
+        gt = cls._get_open3d_ptcloud(gt)
+
+        dist2 = gt.compute_point_cloud_distance(pred)
+
+        recall = float(sum(d < th for d in dist2)) / float(len(dist2))
+        return recall
 
     @classmethod
     def _get_open3d_ptcloud(cls, tensor):
