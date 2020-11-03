@@ -11,7 +11,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 import numpy as np
-import open3d as o3d
+import h5py
 # import scipy.misc
 # import cv2 as cv
 # import numpy as np
@@ -20,9 +20,6 @@ import open3d as o3d
 import utils.data_loaders
 import utils.helpers
 
-import sys
-sys.path.append('/home/wuruihai/PyTorchEMD')
-from emd import earth_mover_distance
 from extensions.chamfer_dist import ChamferDistance
 from extensions.gridding_loss import GriddingLoss
 from models.grnet import GRNet
@@ -53,7 +50,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
         dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
         # 在data_loader.py中修改这里的dataset值
         test_data_loader = torch.utils.data.DataLoader(dataset=dataset_loader.get_dataset(
-            utils.data_loaders.DatasetSubset.TEST),
+            utils.data_loaders.DatasetSubset.VAL),
                                                        batch_size=1,
                                                        num_workers=cfg.CONST.NUM_WORKERS,
                                                        collate_fn=utils.data_loaders.collate_fn,
@@ -90,10 +87,44 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
     # Testing loop
     # 通过data得到sparse_pucloud,  data from test_data_loader
 
-    tot_recall, tot_precision, tot_emd = 0.0, 0.0, 0.0
-    tot_shapes = 0
+    '''
+    gt_path = '/raid/wuruihai/GRNet_FILES/xkh/Completion3D/val/gt/03001627/'
+    # pred_path = '/raid/wuruihai/GRNet_FILES/Results/Completion3D_grnet_data_ep300_npz_2048d/'  # 0.0033
+    pred_path = '/raid/wuruihai/GRNet_FILES/Results/Completion3D_grnet_alldata_ep300_npz_small_2048d/'   # 0.0030
+    n_points = 2048
+    for root, dirs, files in os.walk(pred_path):
+        len_files = len(files)
+        pred_batch = np.zeros((1, n_points, 3))
+        gt_batch = np.zeros((1, n_points, 3))
+        idx = -1
+        tot = 0
 
-    score_dict = {}
+        for file in files:
+            file_id = os.path.splitext(file)[0]
+            idx += 1
+
+            pred = np.load(pred_path + file)['pts']
+            # pred = rescale_pc_parts(pred, num_points=n_points)
+            # pred = pred.reshape(n_points, 3)
+            pred_batch[0] = pred
+
+            gt = h5py.File(gt_path + file_id + '.h5', 'r')['data'][:]  # Completion3D
+            gt = np.array(gt).astype(np.float32)
+            # gt = rescale_pc_parts(gt, num_points=n_points)
+            # gt = gt.reshape(n_points, 3)
+            gt_batch[0] = gt
+
+
+            with torch.no_grad():
+                cd = chamfer_dist(torch.tensor(pred_batch, dtype=torch.float32).cuda(), torch.tensor(gt_batch, dtype=torch.float32).cuda())
+            print(cd)
+            tot += cd
+        print('avg: ', tot/len_files)
+
+        return
+    '''
+
+
 
     for model_idx, (taxonomy_id, model_id, data) in enumerate(test_data_loader):
         taxonomy_id = taxonomy_id[0] if isinstance(taxonomy_id[0], str) else taxonomy_id[0].item()
@@ -103,44 +134,13 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             for k, v in data.items():
                 data[k] = utils.helpers.var_or_cuda(v)
 
+
+
             sparse_ptcloud, dense_ptcloud = grnet(data)
-            # print('--------dense: ', type(dense_ptcloud), dense_ptcloud.shape)
-            # print('--------gt: ', type(data['gtcloud']), data['gtcloud'.shape])
             sparse_loss = chamfer_dist(sparse_ptcloud, data['gtcloud'])
             # grid_loss = gridding_loss(dense_ptcloud, data['gtcloud'])
             dense_loss = chamfer_dist(dense_ptcloud, data['gtcloud'])
-
-            # Fsore
-            fscore_pred = o3d.geometry.PointCloud()
-            # print(type(dense_ptcloud))
-            # print(dense_ptcloud.shape)
-            # print(data['gtcloud'].shape)
-            # print(type(data['gtcloud']))
-            fscore_pred.points = o3d.utility.Vector3dVector(np.array(dense_ptcloud.squeeze().cpu().detach().numpy()))
-            fscore_gt = o3d.geometry.PointCloud()
-            fscore_gt.points = o3d.utility.Vector3dVector(data['gtcloud'].squeeze().cpu().detach().numpy())
-
-            dist1 = fscore_pred.compute_point_cloud_distance(fscore_gt)
-            dist2 = fscore_gt.compute_point_cloud_distance(fscore_pred)
-
-            th = 0.01
-            recall = float(sum(d < th for d in dist2)) / float(len(dist2))
-            precision = float(sum(d < th for d in dist1)) / float(len(dist1))
-            tot_recall += recall
-            tot_precision += precision
-
-            # 计算EMD
-            # dense_pts = np.array(dense_ptcloud.cpu())
-            # num_points = dense_pts.shape[1]
-            # EMD_loss = earth_mover_distance(dense_ptcloud, data['gtcloud'], transpose=False) / num_points
-            # EMD_loss = EMD_loss.mean().item()
-            # tot_emd += EMD_loss
-
-            tot_shapes += 1
-
-
-
-            # print('dense_pc: ', dense_ptcloud.shape,  type(dense_ptcloud))
+            print(dense_ptcloud.shape, data['gtcloud'].shape)
             test_losses.update([sparse_loss.item() * 1000, dense_loss.item() * 1000])
             # test_losses.update([grid_loss.item() * 1000, dense_loss.item() * 1000])
             _metrics = Metrics.get(dense_ptcloud, data['gtcloud']) # return: values
@@ -179,36 +179,27 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
 
 
             # 存npz (GRNet's data),  Completion3D, 没有part
+            # 和grnet自己的数据集比较，不需要放大(/0.45)
 
-            # save_path = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_grnet_pretrained_model_VAL_npz/'
-            # if not os.path.exists(save_path):
-            #     os.makedirs(save_path)
-            # dense_pts = np.array(dense_ptcloud.cpu())
-            # np.savez(save_path + '%s.npz' % model_id, pts=dense_pts)
-
-            # 存scores为txt
-
+            '''
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_grnet_alldata_ep300_npz_small_16384d/'
+            save_path2 = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_grnet_alldata_ep300_npz_small_2048d/'
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            if not os.path.exists(save_path2):
+                os.makedirs(save_path2)
             dense_pts = np.array(dense_ptcloud.cpu())
-            CD_loss = dense_loss.item()
-
-            num_points = dense_pts.shape[1]
-            EMD_loss = earth_mover_distance(dense_ptcloud, data['gtcloud'], transpose=False) / num_points
-            EMD_loss = EMD_loss.mean().item()
-
-            fscore = 2 * recall * precision / (recall + precision) if recall + precision else 0
-
-            score_dict[model_id] = (CD_loss, EMD_loss, precision, recall, fscore)
-            # print(score_dict)
-
-
-
+            dense_pts2 = rescale_pc_parts(dense_pts, 2048)  # rescale
+            np.savez(save_path + '%s.npz' % model_id, pts=dense_pts)
+            np.savez(save_path2 + '%s.npz' % model_id, pts = dense_pts2)
+            '''
 
 
 
 
             # 存 png
             '''
-            save_path = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_GRNet_1003/'
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_zy_chair_ep500_part0_16384d_png/'
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
 
@@ -229,7 +220,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
 
             dense_ptcloud = dense_ptcloud.squeeze().cpu().numpy()
             dense_ptcloud_img = utils.helpers.get_ptcloud_img(dense_ptcloud)
-            matplotlib.image.imsave(save_path + '%s_2_dns.png' % model_id,
+            matplotlib.image.imsave(save_path+'%s_2_dns.png' % model_id,
                                     dense_ptcloud_img)
 
             
@@ -291,16 +282,6 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
         print(metric, end='\t')
     print()
 
-
-    # 将CD, EMD存到txt中
-    # print(score_dict)
-    # fname = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_grnet_pretrained_model_VAL_scores.txt'
-    # fw = open(fname, 'w')
-    # # print(score_dict)
-    # for idx in score_dict.keys():
-    #     fw.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (idx, score_dict[idx][0], score_dict[idx][1], score_dict[idx][2], score_dict[idx][3], score_dict[idx][4]))  # model_id \t CD \t EMD
-
-
     for taxonomy_id in category_metrics:
         print(taxonomy_id, end='\t')
         print(category_metrics[taxonomy_id].count(0), end='\t')
@@ -312,10 +293,6 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
     for value in test_metrics.avg():
         print('%.4f' % value, end='\t')
     print('\n')
-
-    print('recall: ', tot_recall / tot_shapes)
-    print('precision: ', tot_precision / tot_shapes)
-    # print('EMD: ', tot_emd / tot_shapes)
 
     # Add testing results to TensorBoard
     if test_writer is not None:

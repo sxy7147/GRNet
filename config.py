@@ -26,8 +26,8 @@ __C.DATASETS.SHAPENET.PARTIAL_POINTS_PATH        = '/raid/wuruihai/GRNet_FILES/x
 __C.DATASETS.SHAPENET.COMPLETE_POINTS_PATH       = '/raid/wuruihai/GRNet_FILES/xkh/ShapeNetCompletion/%s/complete/%s/%s.pcd'
 __C.DATASETS.KITTI                               = edict()
 __C.DATASETS.KITTI.CATEGORY_FILE_PATH            = './datasets/KITTI.json'
-__C.DATASETS.KITTI.PARTIAL_POINTS_PATH           = '/home/SENSETIME/xiehaozhe/Datasets/KITTI/cars/%s.pcd'
-__C.DATASETS.KITTI.BOUNDING_BOX_FILE_PATH        = '/home/SENSETIME/xiehaozhe/Datasets/KITTI/bboxes/%s.txt'
+__C.DATASETS.KITTI.PARTIAL_POINTS_PATH           = '/home2/wuruihai/GRNet_FILES/KITTI/cars/%s.pcd'
+__C.DATASETS.KITTI.BOUNDING_BOX_FILE_PATH        = '/home2/wuruihai/GRNet_FILES/KITTI/bboxes/%s.txt'
 
 #
 # Dataset
@@ -38,12 +38,14 @@ __C.DATASET.TRAIN_DATASET                        = 'ShapeNet'
 __C.DATASET.TEST_DATASET                         = 'ShapeNet'
 # __C.DATASET.TRAIN_DATASET                        = 'Completion3D'
 # __C.DATASET.TEST_DATASET                         = 'Completion3D'
+# __C.DATASET.TRAIN_DATASET                        = 'KITTI'
+# __C.DATASET.TEST_DATASET                         = 'KITTI'
 
 #
 # Constants
 #
 __C.CONST                                        = edict()
-__C.CONST.DEVICE                                 = '0'
+__C.CONST.DEVICE                                 = '1'
 __C.CONST.NUM_WORKERS                            = 8
 __C.CONST.N_INPUT_POINTS                         = 2048
 

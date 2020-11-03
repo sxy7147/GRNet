@@ -20,9 +20,6 @@ import open3d as o3d
 import utils.data_loaders
 import utils.helpers
 
-import sys
-sys.path.append('/home/wuruihai/PyTorchEMD')
-from emd import earth_mover_distance
 from extensions.chamfer_dist import ChamferDistance
 from extensions.gridding_loss import GriddingLoss
 from models.grnet import GRNet
@@ -44,13 +41,13 @@ def rescale_pc_parts(full_part_pc, num_points=2048):
     return full_part_pc
 
 
-def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=None):
+def test_net_KITTI(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=None):
     # Enable the inbuilt cudnn auto-tuner to find the best algorithm to use
     torch.backends.cudnn.benchmark = True
 
     if test_data_loader is None:
         # Set up data loader
-        dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](cfg)
+        dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING['KITTI'](cfg)
         # 在data_loader.py中修改这里的dataset值
         test_data_loader = torch.utils.data.DataLoader(dataset=dataset_loader.get_dataset(
             utils.data_loaders.DatasetSubset.TEST),
@@ -90,10 +87,8 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
     # Testing loop
     # 通过data得到sparse_pucloud,  data from test_data_loader
 
-    tot_recall, tot_precision, tot_emd = 0.0, 0.0, 0.0
+    tot_recall, tot_precision = 0.0, 0.0
     tot_shapes = 0
-
-    score_dict = {}
 
     for model_idx, (taxonomy_id, model_id, data) in enumerate(test_data_loader):
         taxonomy_id = taxonomy_id[0] if isinstance(taxonomy_id[0], str) else taxonomy_id[0].item()
@@ -128,17 +123,7 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
             precision = float(sum(d < th for d in dist1)) / float(len(dist1))
             tot_recall += recall
             tot_precision += precision
-
-            # 计算EMD
-            # dense_pts = np.array(dense_ptcloud.cpu())
-            # num_points = dense_pts.shape[1]
-            # EMD_loss = earth_mover_distance(dense_ptcloud, data['gtcloud'], transpose=False) / num_points
-            # EMD_loss = EMD_loss.mean().item()
-            # tot_emd += EMD_loss
-
             tot_shapes += 1
-
-
 
             # print('dense_pc: ', dense_ptcloud.shape,  type(dense_ptcloud))
             test_losses.update([sparse_loss.item() * 1000, dense_loss.item() * 1000])
@@ -179,29 +164,20 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
 
 
             # 存npz (GRNet's data),  Completion3D, 没有part
+            # 和grnet自己的数据集比较，不需要放大(/0.45)
 
-            # save_path = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_grnet_pretrained_model_VAL_npz/'
-            # if not os.path.exists(save_path):
-            #     os.makedirs(save_path)
-            # dense_pts = np.array(dense_ptcloud.cpu())
-            # np.savez(save_path + '%s.npz' % model_id, pts=dense_pts)
-
-            # 存scores为txt
-
+            '''
+            save_path = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_grnet_alldata_ep300_npz_small_16384d/'
+            save_path2 = '/home2/wuruihai/GRNet_FILES/Results/Completion3D_grnet_alldata_ep300_npz_small_2048d/'
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            if not os.path.exists(save_path2):
+                os.makedirs(save_path2)
             dense_pts = np.array(dense_ptcloud.cpu())
-            CD_loss = dense_loss.item()
-
-            num_points = dense_pts.shape[1]
-            EMD_loss = earth_mover_distance(dense_ptcloud, data['gtcloud'], transpose=False) / num_points
-            EMD_loss = EMD_loss.mean().item()
-
-            fscore = 2 * recall * precision / (recall + precision) if recall + precision else 0
-
-            score_dict[model_id] = (CD_loss, EMD_loss, precision, recall, fscore)
-            # print(score_dict)
-
-
-
+            dense_pts2 = rescale_pc_parts(dense_pts, 2048)  # rescale
+            np.savez(save_path + '%s.npz' % model_id, pts=dense_pts)
+            np.savez(save_path2 + '%s.npz' % model_id, pts = dense_pts2)
+            '''
 
 
 
@@ -292,14 +268,6 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
     print()
 
 
-    # 将CD, EMD存到txt中
-    # print(score_dict)
-    # fname = '/home2/wuruihai/GRNet_FILES/Results/ShapeNet_grnet_pretrained_model_VAL_scores.txt'
-    # fw = open(fname, 'w')
-    # # print(score_dict)
-    # for idx in score_dict.keys():
-    #     fw.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (idx, score_dict[idx][0], score_dict[idx][1], score_dict[idx][2], score_dict[idx][3], score_dict[idx][4]))  # model_id \t CD \t EMD
-
 
     for taxonomy_id in category_metrics:
         print(taxonomy_id, end='\t')
@@ -315,7 +283,6 @@ def test_net(cfg, epoch_idx=-1, test_data_loader=None, test_writer=None, grnet=N
 
     print('recall: ', tot_recall / tot_shapes)
     print('precision: ', tot_precision / tot_shapes)
-    # print('EMD: ', tot_emd / tot_shapes)
 
     # Add testing results to TensorBoard
     if test_writer is not None:

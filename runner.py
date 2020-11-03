@@ -24,6 +24,7 @@ from pprint import pprint
 from config import cfg
 from core.train import train_net
 from core.test import test_net
+from core.test_KITTI import test_net_KITTI
 from core.inference import inference_net
 
 from tensorboardX import SummaryWriter
@@ -34,6 +35,7 @@ def get_args_from_command_line():
     parser = argparse.ArgumentParser(description='The argument parser of R2Net runner')
     parser.add_argument('--gpu', dest='gpu_id', help='GPU device to use', default=cfg.CONST.DEVICE, type=str)
     parser.add_argument('--test', dest='test', help='Test neural networks', action='store_true')
+    parser.add_argument('--test_KITTI', dest='test_KITTI', help='Test neural networks', action='store_true')
     parser.add_argument('--inference', dest='inference', help='Inference for benchmark', action='store_true')
     parser.add_argument('--weights', dest='weights', help='Initialize network from the weights file', default=None)
     args = parser.parse_args()
@@ -79,6 +81,11 @@ def main():
             path = '/raid/wuruihai/GRNet_FILES/tb_log'
             test_writer = SummaryWriter(path)
             test_net(cfg, test_writer=test_writer)
+
+        if args.test_KITTI:
+            path = '/raid/wuruihai/GRNet_FILES/tb_log'
+            test_writer = SummaryWriter(path)
+            test_net_KITTI(cfg, test_writer=test_writer)
         else:
             inference_net(cfg)
 

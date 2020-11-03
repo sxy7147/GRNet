@@ -223,6 +223,7 @@ class RandomMirrorPoints(object):
         return ptcloud
 
 
+# Kitti, use 3D bounding box to normalize the input point cloud
 class NormalizeObjectPose(object):
     def __init__(self, parameters):
         input_keys = parameters['input_keys']

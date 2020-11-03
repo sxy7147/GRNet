@@ -86,6 +86,7 @@ class Metrics(object):
 
     @classmethod
     def _get_recall(cls, pred, gt, th=0.01):
+        th = 0.02
         """References: https://github.com/lmb-freiburg/what3d/blob/master/util.py"""
         pred = cls._get_open3d_ptcloud(pred)
         gt = cls._get_open3d_ptcloud(gt)
@@ -127,6 +128,13 @@ class Metrics(object):
                 self._values[metric_indexes[k]] = v
         else:
             raise Exception('Unsupported value type: %s' % type(values))
+
+    def _get_consistency(cls):
+        return
+
+    def _get_uniformity(cls):
+        return
+
 
     def state_dict(self):
         _dict = dict()

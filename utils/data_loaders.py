@@ -190,8 +190,8 @@ class ShapeNetDataLoader(object):
         for dc in self.dataset_categories:
             # train chair only
 
-            # if str(dc['taxonomy_id']) != '03001627':
-            #     continue
+            if str(dc['taxonomy_id']) != '03001627':
+                continue
 
 
 
@@ -316,8 +316,8 @@ class Completion3DDataLoader(object):
         for dc in self.dataset_categories:
 
             # only train taxonomy-chair
-            # if str(dc['taxonomy_id']) != '03001627':
-            #     continue
+            if str(dc['taxonomy_id']) != '03001627':
+                continue
 
             logging.info('Collecting files of Taxonomy [ID=%s, Name=%s]' % (dc['taxonomy_id'], dc['taxonomy_name']))
             samples = dc[subset]  # 每个循环，sample就是该类的数据
